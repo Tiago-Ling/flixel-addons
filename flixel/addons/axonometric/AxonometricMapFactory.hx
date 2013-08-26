@@ -18,11 +18,9 @@ class AxonometricMapFactory
 {				
 	private var blockDescriptor:BlockDescriptor;
 	
-	public function new()
+	public function new(floorTile:BitmapData, wallTileA:BitmapData, wallTileB:BitmapData, width:Int, height:Int, depth:Int)
 	{
-		var floorTown:BitmapData = Assets.getBitmapData("images/tile_town.png");
-		var groundDirt:BitmapData = Assets.getBitmapData("images/grounddirt.png");
-		SetBlockDescriptor(40,40,40,floorTown,groundDirt,groundDirt);
+		SetBlockDescriptor(width, height, depth, floorTile, wallTileA, wallTileB);
 	}
 	
 	/**

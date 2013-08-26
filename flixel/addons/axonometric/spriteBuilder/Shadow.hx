@@ -3,6 +3,7 @@ package flixel.addons.axonometric.spriteBuilder ;
 import flash.geom.Point;
 import flixel.FlxSprite;
 import openfl.Assets;
+import flash.display.BitmapData;
 
 /**
  * shadow of the sprite.
@@ -31,18 +32,12 @@ class Shadow extends FlxSprite
 	 * @param owner the owner of the shadow
 	 * 
 	 */ 
-	public function new(owner:AxonometricSprite, noshadow:Bool) 
+	public function new(owner:AxonometricSprite, shadowGfx:BitmapData)
 	{
 		super();
-		if (!noshadow) 
-		{
-			loadGraphic(Assets.getBitmapData("images/oval_shadow_anim.png"), true, true, 18, 12);
-		}
-		else 
-		{
-			loadGraphic(Assets.getBitmapData("images/oval_shadow_anim.png"), true, true, 18, 12);
-		}
-		
+
+		//TODO: Remove all hardcoded sprite and animation
+		loadGraphic(shadowGfx, true, true, 18, 12);
 		shadow_size_steps = 15;
 
 		for (i in 0...shadow_size_steps) 

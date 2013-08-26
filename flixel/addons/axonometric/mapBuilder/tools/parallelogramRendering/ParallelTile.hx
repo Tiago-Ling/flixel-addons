@@ -3,9 +3,11 @@ package flixel.addons.axonometric.mapBuilder.tools.parallelogramRendering;
 import flixel.FlxObject;
 
 /**
- * a helper object to render paralelograms, modified from the original.
+ * a helper object to render paralelograms, modified from the original FlxTile (@author Adam Atomic).
  * 
- * @author	Adam Atomic(original)Miguel Ángel Piedras Carrillo(Modificado)
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class ParallelTile extends FlxObject
 {

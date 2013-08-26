@@ -6,8 +6,11 @@ import flixel.addons.axonometric.mapBuilder.tools.AxisManager;
 import flixel.group.FlxGroup;
 
 /**
- *   A layer has a collection of the objects shown in screen
- * @author Miguel Ángel Piedras Carrillo
+ * A layer has a collection of the objects shown in screen
+ * 
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class Layer extends FlxGroup
 {		

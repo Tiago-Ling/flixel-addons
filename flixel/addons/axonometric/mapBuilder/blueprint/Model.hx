@@ -3,7 +3,9 @@ package flixel.addons.axonometric.mapBuilder.blueprint ;
 /**
  * Sets the model wich serves as a blueprint to create the stage
  * 
- * @author Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class Model 
 {		

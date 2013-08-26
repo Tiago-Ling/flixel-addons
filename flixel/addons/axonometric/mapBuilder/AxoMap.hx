@@ -5,10 +5,13 @@ import flixel.addons.axonometric.mapBuilder.blueprint.*;
 import flixel.addons.axonometric.mapBuilder.tools.*;
 import flixel.addons.axonometric.spriteBuilder.*;
 import flixel.FlxG;
+
 /**
  * An instance of a map, the display object of this library
  * 
- * @author Miguel Angel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class AxoMap extends FlxGroup
 {

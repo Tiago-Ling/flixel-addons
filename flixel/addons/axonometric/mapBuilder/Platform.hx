@@ -10,7 +10,9 @@ import flixel.group.FlxGroup;
 /**
  * A platform is the rendering of a node, the graphical part of the floor
  * 
- * @author Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class Platform extends FlxGroup
 {

@@ -13,7 +13,9 @@ import flixel.util.loaders.CachedGraphics;
 /**
  * A reference to the transformed images used in ParallelogramRendering, it helps reduce the amount of repeated information between nodes.
  * 
- * @author Miguel Angel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class ParallelogramReference 
 {		

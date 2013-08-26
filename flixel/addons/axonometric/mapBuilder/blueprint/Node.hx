@@ -6,7 +6,9 @@ import flixel.addons.axonometric.mapBuilder.tools.parallelogramRendering.*;
  * A node represents a square section of the topography of the map, it also has information that it is used in the creation of the layers of the map and information to 
  * the limits of each platform
  * 
- * @author	Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class Node 
 {		

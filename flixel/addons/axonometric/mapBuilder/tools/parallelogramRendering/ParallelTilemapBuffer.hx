@@ -9,9 +9,11 @@ import flixel.FlxCamera;
 import flixel.FlxG;
 
 /**
- * A modified version of FlxTilemapBugger, modiffied to render parallelograms
+ * A modified version of FlxTilemapBuffer (@author Adam Atomic), modiffied to render parallelograms
  * 
- * @author	Adam Atomic(original)Miguel Ángel Piedras Carrillo(modified)
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class ParallelTilemapBuffer
 {

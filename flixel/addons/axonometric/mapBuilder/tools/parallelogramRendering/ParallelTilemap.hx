@@ -22,9 +22,11 @@ import flixel.system.layer.Region;
 
 
 /**
- * this is a normal FlxTilemap object modified to render paralelograms
+ * this is a normal FlxTilemap (@author Adam Atomic) object modified to render paralelograms
  *
- * @author	Adam Atomic(original)Miguel Ángel Piedras Carrillo(Modified)
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */	
 class ParallelTilemap extends FlxObject
 {		

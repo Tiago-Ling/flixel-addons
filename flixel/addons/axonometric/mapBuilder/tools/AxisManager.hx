@@ -11,7 +11,9 @@ import flixel.util.FlxColor;
 /**
  * The axis manager is in charge of the positioning of the items on stage, in reference to the 2D sistem.
  * 
- * @author Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class AxisManager 
 {

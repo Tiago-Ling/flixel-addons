@@ -1,8 +1,11 @@
 package flixel.addons.axonometric.mapBuilder.blueprint;
+
 /**
  * The conection between a node and its neighboor
  *
- * @author	Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class NodeLink 
 {

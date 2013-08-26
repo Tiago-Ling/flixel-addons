@@ -3,10 +3,13 @@ package flixel.addons.axonometric.spriteBuilder ;
 import flash.geom.Point;
 import flixel.FlxSprite;
 import openfl.Assets;
+
 /**
  * shadow of the sprite.
  * 
- * @author Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class Shadow extends FlxSprite
 {	

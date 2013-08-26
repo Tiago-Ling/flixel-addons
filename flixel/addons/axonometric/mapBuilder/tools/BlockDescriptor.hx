@@ -5,7 +5,9 @@ import flash.display.BitmapData;
 /**
  * The block descriptor sets the general shape of the floor by defining images and measures to be used in the new 2.5d stage
  * 
- * @author Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class BlockDescriptor 
 {

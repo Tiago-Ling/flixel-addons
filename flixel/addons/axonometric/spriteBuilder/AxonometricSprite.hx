@@ -9,7 +9,9 @@ import flixel.FlxSprite;
 /**
  * Sprite created to Interact with the new stage, since it extends flxSprite, all of its behaviour is also ihnerited
  * 
- * @author Miguel Ángel Piedras Carrillo
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */
 class AxonometricSprite extends FlxSprite 
 {

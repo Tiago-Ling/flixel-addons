@@ -9,7 +9,9 @@ import openfl.Assets;
 /**
  * The factory method of the library, given a block descriptor, and a creation method, creates objets of the class AxoMap
  * 
- * @author	AS3 Original: Miguel Ángel Piedras Carrillo; Haxe Port: Tiago Ling Alexandre
+ * @author	AS3 Original: Miguel Ángel Piedras Carrillo; 
+ * 			Original Haxe 2.10 Port: Masadow
+ * 			Second Haxe Port: Tiago Ling Alexandre
  */	
 
 class AxonometricMapFactory

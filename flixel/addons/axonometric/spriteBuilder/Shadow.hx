@@ -32,20 +32,19 @@ class Shadow extends FlxSprite
 	 * @param owner the owner of the shadow
 	 * 
 	 */ 
-	public function new(owner:AxonometricSprite, shadowGfx:BitmapData)
+	public function new(owner:AxonometricSprite, shadowGfx:BitmapData, gfxWidth:Int, gfxHeight:Int, numFrames:Int)
 	{
 		super();
 
-		//TODO: Remove all hardcoded sprite and animation
-		loadGraphic(shadowGfx, true, true, 18, 12);
-		shadow_size_steps = 15;
+		loadGraphic(shadowGfx, true, true, gfxWidth, gfxHeight);
+		shadow_size_steps = numFrames;
 
 		for (i in 0...shadow_size_steps) 
 		{				
 			addAnimation(i + "", [i], 0, false);
 		}			
-		mywidth	= 18;
-		myheight = 12;
+		mywidth	= gfxWidth;
+		myheight = gfxHeight;
 		width = 0;
 		height = 0;
 		MaxHeight = 300;

@@ -216,8 +216,8 @@ class FlxTilemapIso extends FlxTilemap
 				
 				if (tileID != -1)
 				{
-					drawX = _helperPoint.x + (columnIndex % widthInTiles) * (_scaledTileWidth / 2);
-					drawY = _helperPoint.y + Math.floor(columnIndex / widthInTiles) * (_scaledTileHeight / 2);
+					drawX = _helperPoint.x + heightInTiles * _scaledTileWidth / 2 - (_scaledTileWidth / 2 * (row + 1)) + column * _scaledTileWidth / 2;
+					drawY = _helperPoint.y + row * _scaledTileHeight / 2 + column * _scaledTileHeight / 2;
 					
 					#if !js
 					currDrawData[currIndex++] = drawX;

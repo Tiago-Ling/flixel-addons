@@ -2,6 +2,7 @@ package flixel.addons.tile.isoXel;
 import flixel.tile.FlxTilemap;
 import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemapBuffer;
+import flixel.system.layer.DrawStackItem;
 
 /**
  * Support for isometric tilemap

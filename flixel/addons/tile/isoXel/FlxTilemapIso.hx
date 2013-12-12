@@ -1,7 +1,7 @@
 package flixel.addons.tile.isoXel;
 import flixel.tile.FlxTilemap;
-import flixel.tile.FlxTilemapBuffer;
 import flixel.tile.FlxTile;
+import flixel.tile.FlxTilemapBuffer;
 
 /**
  * Support for isometric tilemap
@@ -37,7 +37,68 @@ class FlxTilemapIso extends FlxTilemap
 	{
 		super();
 	}
-	
+
+	/**
+	 * Draws the tilemap buffers to the cameras.
+	 */
+	override public function draw():Void
+	{
+		if (cameras == null)
+		{
+			cameras = FlxG.cameras.list;
+		}
+		
+		var camera:FlxCamera;
+		var buffer:FlxTilemapBuffer;
+		var i:Int = 0;
+		var l:Int = cameras.length;
+		
+		while (i < l)
+		{
+			camera = cameras[i];
+			
+			if (!camera.visible || !camera.exists)
+			{
+				continue;
+			}
+			
+			if (_buffers[i] == null)
+			{
+				_buffers[i] = new FlxTilemapBufferIso(_tileWidth, _tileHeight, widthInTiles, heightInTiles, camera, scaleX, scaleY);
+				_buffers[i].forceComplexRender = forceComplexRender;
+			}
+			
+			buffer = _buffers[i++];
+			buffer.dirty = true;
+			#if flash
+			if (!buffer.dirty)
+			{
+				// Copied from getScreenXY()
+				_point.x = x - (camera.scroll.x * scrollFactor.x) + buffer.x; 
+				_point.y = y - (camera.scroll.y * scrollFactor.y) + buffer.y;
+				buffer.dirty = (_point.x > 0) || (_point.y > 0) || (_point.x + buffer.width < camera.width) || (_point.y + buffer.height < camera.height);
+			}
+			
+			if (buffer.dirty)
+			{
+				drawTilemap(buffer, camera);
+				buffer.dirty = false;
+			}
+			
+			// Copied from getScreenXY()
+			_flashPoint.x = x - (camera.scroll.x * scrollFactor.x) + buffer.x; 
+			_flashPoint.y = y - (camera.scroll.y * scrollFactor.y) + buffer.y;
+			buffer.draw(camera, _flashPoint, scaleX, scaleY);
+			#else
+			drawTilemap(buffer, camera);
+			#end
+			
+			#if !FLX_NO_DEBUG
+			FlxBasic._VISIBLECOUNT++;
+			#end
+		}
+	}
+
 	/**
 	 * Internal function that actually renders the tilemap to the tilemap buffer.  Called by draw().
 	 * @param	Buffer		The <code>FlxTilemapBuffer</code> you are rendering to.

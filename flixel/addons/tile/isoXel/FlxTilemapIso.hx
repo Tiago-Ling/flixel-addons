@@ -3,6 +3,7 @@ import flixel.tile.FlxTilemap;
 import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemapBuffer;
 import flixel.system.layer.DrawStackItem;
+import flixel.util.FlxPoint;
 
 /**
  * Support for isometric tilemap
@@ -237,7 +238,7 @@ class FlxTilemapIso extends FlxTilemap
 					
 					#if !js
 					// Alpha
-					currDrawData[currIndex++] = 1.0; 
+					currDrawData[currIndex++] = 1.0;
 					#end
 				}
 				#end
@@ -261,5 +262,100 @@ class FlxTilemapIso extends FlxTilemap
 		Buffer.x = screenXInTiles * _scaledTileWidth;
 		Buffer.y = screenYInTiles * _scaledTileHeight;
 	}	
+
+	/**
+	 * Find the index of the tile at given position.
+	 * Result is -1 if the point is outside map.
+	 * 
+	 * @param	Point		A point in world coordinates.
+	 * @return	An Int containing the index of the tile at this coordinate. -1 if no tile were found.
+	 */
+	public function getIndexFromPoint(Point:FlxPoint):Int {
+		//Calculate corrected mouse position
+		var x0 = Point.x - heightInTiles * _scaledTileWidth / 2 - x;
+		var y0 = Point.y - y;
+
+		//Calculate coordinates
+		var row = Std.int(y0 / _scaledTileHeight - x0 / _scaledTileWidth);
+		var col = Std.int(y0 / _scaledTileHeight + x0 / _scaledTileWidth);
+
+		//Check if the coordinates are valid
+		if (row < 0 || row >= heightInTiles || col < 0 || col >= widthInTiles)
+			return -1;
+
+		//Finally compute the index
+		return row * widthInTiles + col;
+	}
 	
+	/**
+	 * Find a path through the tilemap.  Any tile with any collision flags set is treated as impassable.
+	 * If no path is discovered then a null reference is returned.
+	 * 
+	 * @param	Start		The start point in world coordinates.
+	 * @param	End			The end point in world coordinates.
+	 * @param	Simplify	Whether to run a basic simplification algorithm over the path data, removing extra points that are on the same line.  Default value is true.
+	 * @param	RaySimplify	Whether to run an extra raycasting simplification algorithm over the remaining path data.  This can result in some close corners being cut, and should be used with care if at all (yet).  Default value is false.
+	 * @param   WideDiagonal   Whether to require an additional tile to make diagonal movement. Default value is true;
+	 * @return	An Array of FlxPoints, containing all waypoints from the start to the end.  If no path could be found, then a null reference is returned.
+	 */
+	override public function findPath(Start:FlxPoint, End:FlxPoint, Simplify:Bool = true, RaySimplify:Bool = false, WideDiagonal:Bool = true):Array<FlxPoint>
+	{
+		// Figure out what tile we are starting and ending on.
+		var startIndex:Int = getIndexFromPoint(Start);
+		var endIndex:Int = getIndexFromPoint(End);
+
+		// Check that the start and end are clear.
+		if (startIndex == -1 || endIndex == -1 || (_tileObjects[_data[startIndex]].allowCollisions > 0) || (_tileObjects[_data[endIndex]].allowCollisions > 0))
+		{
+			return null;
+		}
+		
+		// Figure out how far each of the tiles is from the starting tile
+		var distances:Array<Int> = computePathDistance(startIndex, endIndex, WideDiagonal);
+		
+		if (distances == null)
+		{
+			return null;
+		}
+
+		// Then count backward to find the shortest path.
+		var points:Array<FlxPoint> = new Array<FlxPoint>();
+		walkPath(distances, endIndex, points);
+		
+		// Reset the start and end points to be exact
+		var node:FlxPoint;
+		node = points[points.length-1];
+		node.x = Start.x;
+		node.y = Start.y;
+		node = points[0];
+		node.x = End.x;
+		node.y = End.y;
+
+		// Some simple path cleanup options
+		if (Simplify)
+		{
+			simplifyPath(points);
+		}
+		if (RaySimplify)
+		{
+			raySimplifyPath(points);
+		}
+		
+		// Finally load the remaining points into a new path object and return it
+		var path:Array<FlxPoint> = [];
+		var i:Int = points.length - 1;
+		
+		while (i >= 0)
+		{
+			node = points[i--];
+			
+			if (node != null)
+			{
+				path.push(node);
+			}
+		}
+		
+		return path;
+	}
+
 }

@@ -4,6 +4,7 @@ import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemapBuffer;
 import flixel.system.layer.DrawStackItem;
 import flixel.util.FlxPoint;
+import flash.display.BitmapData;
 
 /**
  * Support for isometric tilemap
@@ -356,6 +357,110 @@ class FlxTilemapIso extends FlxTilemap
 		}
 		
 		return path;
+	}
+
+	/**
+	 * Pathfinding helper function, recursively walks the grid and finds a shortest path back to the start.
+	 * 
+	 * @param	Data	A Flash <code>Array</code> of distance information.
+	 * @param	Start	The tile we're on in our walk backward.
+	 * @param	Points	A Flash <code>Array</code> of <code>FlxPoint</code> nodes composing the path from the start to the end, compiled in reverse order.
+	 */
+	override private function walkPath(Data:Array<Int>, Start:Int, Points:Array<FlxPoint>):Void
+	{
+		//drawX = _helperPoint.x + heightInTiles * _scaledTileWidth / 2 - (_scaledTileWidth / 2 * (row + 1)) + column * _scaledTileWidth / 2;
+		//drawY = _helperPoint.y + row * _scaledTileHeight / 2 + column * _scaledTileHeight / 2;
+		Points.push(new FlxPoint(	x + _scaledTileWidth * 0.5 * (heightInTiles + Math.floor(Start % widthInTiles) - Math.floor(Start / widthInTiles)),
+									y + _scaledTileHeight * 0.5 * (Math.floor(Start / widthInTiles) + Math.floor(Start % widthInTiles) + 1)));
+
+		if (Data[Start] == 0)
+		{
+			return;
+		}
+		
+		// Basic map bounds
+		var left:Bool = (Start % widthInTiles) > 0;
+		var right:Bool = (Start % widthInTiles) < (widthInTiles - 1);
+		var up:Bool = (Start / widthInTiles) > 0;
+		var down:Bool = (Start / widthInTiles) < (heightInTiles - 1);
+		
+		var current:Int = Data[Start];
+		var i:Int;
+		
+		if (up)
+		{
+			i = Start - widthInTiles;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		if (right)
+		{
+			i = Start + 1;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		if (down)
+		{
+			i = Start + widthInTiles;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		if (left)
+		{
+			i = Start - 1;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		if (up && right)
+		{
+			i = Start - widthInTiles + 1;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		if (right && down)
+		{
+			i = Start + widthInTiles + 1;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		if (left && down)
+		{
+			i = Start + widthInTiles - 1;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		if (up && left)
+		{
+			i = Start - widthInTiles - 1;
+			
+			if (i >= 0 && (Data[i] >= 0) && (Data[i] < current))
+			{
+				return walkPath(Data, i, Points);
+			}
+		}
+		
+		return;
 	}
 
 }

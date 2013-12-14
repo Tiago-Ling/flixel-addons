@@ -122,7 +122,7 @@ class FlxTilemapIso extends FlxObject
 	/**
 	 * Internal list of buffers, one for each camera, used for drawing the tilemaps.
 	 */
-	private var _buffers:Array<FlxTilemapBuffer>;
+	private var _buffers:Array<FlxTilemapBufferIso>;
 	/**
 	 * Internal representation of the actual tile data, as a large 1D array of integers.
 	 */
@@ -208,7 +208,7 @@ class FlxTilemapIso extends FlxObject
 		widthInTiles = 0;
 		heightInTiles = 0;
 		totalTiles = 0;
-		_buffers = new Array<FlxTilemapBuffer>();
+		_buffers = new Array<FlxTilemapBufferIso>();
 		_flashPoint = new Point();
 		_flashRect = null;
 		_data = null;
@@ -344,10 +344,10 @@ class FlxTilemapIso extends FlxObject
 		
 		if (Std.int(rx) >= region.width)
 		{
-			ry = Std.int(rx / region.width) * (_tileDepth + region.spacingY);
+			ry = Std.int(rx / region.width) * (_tileDepth + _tileHeight + region.spacingY);
 			rx %= region.width;
 		}
-		_rects[Index] = (new Rectangle(rx + region.startX, ry + region.startY, _tileWidth, _tileDepth));
+		_rects[Index] = (new Rectangle(rx + region.startX, ry + region.startY, _tileWidth, _tileDepth + _tileHeight));
 		#else
 		_rectIDs[Index] = framesData.frames[_data[Index] - _startingIndex].tileID;
 		#end
@@ -553,7 +553,7 @@ class FlxTilemapIso extends FlxObject
 		
 		#if flash
 		#if !FLX_NO_DEBUG
-		_debugRect = new Rectangle(0, 0, _tileWidth, _tileDepth);
+		_debugRect = new Rectangle(0, 0, _tileWidth, _tileDepth + _tileHeight);
 		#end
 		
 		_rects = new Array<Rectangle>();
@@ -647,7 +647,7 @@ class FlxTilemapIso extends FlxObject
 		}
 		
 		var camera:FlxCamera;
-		var buffer:FlxTilemapBuffer;
+		var buffer:FlxTilemapBufferIso;
 		var i:Int = 0;
 		var l:Int = cameras.length;
 		
@@ -662,7 +662,7 @@ class FlxTilemapIso extends FlxObject
 			
 			if (_buffers[i] == null)
 			{
-				_buffers[i] = new FlxTilemapBufferIso(_tileWidth, _tileDepth, widthInTiles, heightInTiles, camera, scaleX, scaleY);
+				_buffers[i] = new FlxTilemapBufferIso(_tileWidth, _tileDepth, _tileHeight, widthInTiles, heightInTiles, camera, scaleX, scaleY);
 				_buffers[i].forceComplexRender = forceComplexRender;
 			}
 			
@@ -702,7 +702,7 @@ class FlxTilemapIso extends FlxObject
 	 * @param	Buffer		The <code>FlxTilemapBuffer</code> you are rendering to.
 	 * @param	Camera		The related <code>FlxCamera</code>, mainly for scroll values.
 	 */
-	private function drawTilemap(Buffer:FlxTilemapBuffer, Camera:FlxCamera):Void
+	private function drawTilemap(Buffer:FlxTilemapBufferIso, Camera:FlxCamera):Void
 	{
 		#if flash
 		Buffer.fill();
@@ -815,7 +815,7 @@ class FlxTilemapIso extends FlxObject
 				{
 					drawX = _helperPoint.x + heightInTiles * _scaledTileWidth / 2 - (_scaledTileWidth / 2 * (row + 1)) + column * _scaledTileWidth / 2;
 					drawY = _helperPoint.y + row * _scaledTileDepth / 2 + column * _scaledTileDepth / 2;
-					
+
 					#if !js
 					currDrawData[currIndex++] = drawX;
 					currDrawData[currIndex++] = drawY;
@@ -870,7 +870,7 @@ class FlxTilemapIso extends FlxObject
 	{
 		//Calculate corrected mouse position
 		var x0 = Point.x - heightInTiles * _scaledTileWidth / 2 - x;
-		var y0 = Point.y - y;
+		var y0 = Point.y - y - _scaledTileHeight;
 
 		//Calculate coordinates
 		var row = Std.int(y0 / _scaledTileDepth - x0 / _scaledTileWidth);
@@ -967,7 +967,7 @@ class FlxTilemapIso extends FlxObject
 		//drawX = _helperPoint.x + heightInTiles * _scaledTileWidth / 2 - (_scaledTileWidth / 2 * (row + 1)) + column * _scaledTileWidth / 2;
 		//drawY = _helperPoint.y + row * _scaledTileHeight / 2 + column * _scaledTileHeight / 2;
 		Points.push(new FlxPoint(	x + _scaledTileWidth * 0.5 * (heightInTiles + Math.floor(Start % widthInTiles) - Math.floor(Start / widthInTiles)),
-									y + _scaledTileDepth * 0.5 * (Math.floor(Start / widthInTiles) + Math.floor(Start % widthInTiles) + 1)));
+									y + _scaledTileDepth * 0.5 * (Math.floor(Start / widthInTiles) + Math.floor(Start % widthInTiles) + 1) + _scaledTileHeight));
 
 		if (Data[Start] == 0)
 		{

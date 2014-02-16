@@ -352,26 +352,9 @@ class FlxTilemapIso extends FlxObject
 		_rectIDs[Index] = framesData.frames[_data[Index] - _startingIndex].tileID;
 		#end
 	}
-
-	/**
-	 * Load the tilemap with string data and a tile graphic.
-	 * 
-	 * @param	MapData      	A string of comma and line-return delineated indices indicating what order the tiles should go in, or an <code>Array of Int</code>. YOU MUST SET <code>widthInTiles</code> and <code>heightInTyles</code> manually BEFORE CALLING <code>loadMap</code> if you pass an Array!
-	 * @param	TileGraphic		All the tiles you want to use, arranged in a strip corresponding to the numbers in MapData.
-	 * @param	TileWidth		The width of your tiles (e.g. 8) - defaults to height of the tile graphic if unspecified.
-	 * @param	TileDepth		The depth of your tiles (e.g. 8) - defaults to width if unspecified.
-	 * @param	TileHeight		The height of your tiles (e.g. 8) - defaults to 0 if unspecified.
-	 * @param	AutoTile		Whether to load the map using an automatic tile placement algorithm.  Setting this to either AUTO or ALT will override any values you put for StartingIndex, DrawIndex, or CollideIndex.
-	 * @param	StartingIndex	Used to sort of insert empty tiles in front of the provided graphic.  Default is 0, usually safest ot leave it at that.  Ignored if AutoTile is set.
-	 * @param	DrawIndex		Initializes all tile objects equal to and after this index as visible. Default value is 1.  Ignored if AutoTile is set.
-	 * @param	CollideIndex	Initializes all tile objects equal to and after this index as allowCollisions = ANY.  Default value is 1.  Ignored if AutoTile is set.  Can override and customize per-tile-type collision behavior using <code>setTileProperties()</code>.
-	 * @return	A reference to this instance of FlxTilemap, for chaining as usual :)
-	 */
-	public function loadMap(MapData:Dynamic, TileGraphic:Dynamic, TileWidth:Int = 0, TileDepth:Int = 0, TileHeight:Int = 0, AutoTile:Int = 0, StartingIndex:Int = 0, DrawIndex:Int = 1, CollideIndex:Int = 1):FlxTilemapIso
+	
+	private function loadMapData(MapData : Dynamic)
 	{
-		auto = AutoTile;
-		_startingIndex = (StartingIndex <= 0) ? 0 : StartingIndex;
-		
 		// Populate data if MapData is a CSV string
 		if (Std.is(MapData, String))
 		{
@@ -416,9 +399,13 @@ class FlxTilemapIso extends FlxObject
 			throw "Unexpected MapData format '" + Type.typeof(MapData) + "' passed into loadMap. Map data must be CSV string or Array<Int>.";
 		}
 		
+		totalTiles = _data.length;
+	}
+	
+	private function doAutoTile(DrawIndex : Int, CollideIndex : Int)
+	{
 		// Pre-process the map data if it's auto-tiled
 		var i:Int;
-		totalTiles = _data.length;
 		
 		if (auto > OFF)
 		{
@@ -432,6 +419,11 @@ class FlxTilemapIso extends FlxObject
 				autoTile(i++);
 			}
 		}
+	}
+	
+	private function doCustomRemap()
+	{
+		var i:Int = 0;
 		
 		if (customTileRemap != null) 
 		{
@@ -448,6 +440,11 @@ class FlxTilemapIso extends FlxObject
 				i++;
 			}
 		}
+	}
+	
+	private function randomizeIndices()
+	{
+		var i: Int;
 		
 		if (_randomIndices != null)
 		{
@@ -472,7 +469,10 @@ class FlxTilemapIso extends FlxObject
 				i++;
 			}
 		}
-		
+	}
+	
+	private function cacheGraphics(TileWidth : Int, TileDepth : Int, TileHeight : Int, TileGraphic : Dynamic)
+	{
 		// Figure out the size of the tiles
 		cachedGraphics = FlxG.bitmap.add(TileGraphic);
 		_tileWidth = TileWidth;
@@ -524,7 +524,10 @@ class FlxTilemapIso extends FlxObject
 				region.tileHeight = _tileDepth;
 			}
 		}
-		
+	}
+	
+	private function initTileObjects(DrawIndex : Int, CollideIndex : Int)
+	{
 		// Create some tile objects that we'll use for overlap checks (one for each tile)
 		_tileObjects = new Array<FlxTileIso>();
 		
@@ -542,22 +545,20 @@ class FlxTilemapIso extends FlxObject
 		_debugTilePartial = makeDebugTile(FlxColor.PINK);
 		_debugTileSolid = makeDebugTile(FlxColor.GREEN);
 		#end
-		
-		_scaledTileWidth = _tileWidth * scaleX;
-		_scaledTileDepth = _tileDepth * scaleY;
-		_scaledTileHeight = _tileHeight * scaleY;
-		
-		// Then go through and create the actual map
-		width = widthInTiles * _scaledTileWidth;
-		height = heightInTiles * _scaledTileDepth + _scaledTileHeight;
-		
+	}
+	
+	private function updateMap()
+	{
 		#if flash
+
 		#if !FLX_NO_DEBUG
 		_debugRect = new Rectangle(0, 0, _tileWidth, _tileDepth + _tileHeight);
 		#end
 		
 		_rects = new Array<Rectangle>();
 		FlxArrayUtil.setLength(_rects, totalTiles);
+
+		var i: Int = 0;
 		
 		i = 0;
 		while (i < totalTiles)
@@ -567,6 +568,43 @@ class FlxTilemapIso extends FlxObject
 		#else
 		updateFrameData();
 		#end
+	}
+
+	/**
+	 * Load the tilemap with string data and a tile graphic.
+	 * 
+	 * @param	MapData      	A string of comma and line-return delineated indices indicating what order the tiles should go in, or an <code>Array of Int</code>. YOU MUST SET <code>widthInTiles</code> and <code>heightInTyles</code> manually BEFORE CALLING <code>loadMap</code> if you pass an Array!
+	 * @param	TileGraphic		All the tiles you want to use, arranged in a strip corresponding to the numbers in MapData.
+	 * @param	TileWidth		The width of your tiles (e.g. 8) - defaults to height of the tile graphic if unspecified.
+	 * @param	TileDepth		The depth of your tiles (e.g. 8) - defaults to width if unspecified.
+	 * @param	TileHeight		The height of your tiles (e.g. 8) - defaults to 0 if unspecified.
+	 * @param	AutoTile		Whether to load the map using an automatic tile placement algorithm.  Setting this to either AUTO or ALT will override any values you put for StartingIndex, DrawIndex, or CollideIndex.
+	 * @param	StartingIndex	Used to sort of insert empty tiles in front of the provided graphic.  Default is 0, usually safest ot leave it at that.  Ignored if AutoTile is set.
+	 * @param	DrawIndex		Initializes all tile objects equal to and after this index as visible. Default value is 1.  Ignored if AutoTile is set.
+	 * @param	CollideIndex	Initializes all tile objects equal to and after this index as allowCollisions = ANY.  Default value is 1.  Ignored if AutoTile is set.  Can override and customize per-tile-type collision behavior using <code>setTileProperties()</code>.
+	 * @return	A reference to this instance of FlxTilemap, for chaining as usual :)
+	 */
+	public function loadMap(MapData:Dynamic, TileGraphic:Dynamic, TileWidth:Int = 0, TileDepth:Int = 0, TileHeight:Int = 0, AutoTile:Int = 0, StartingIndex:Int = 0, DrawIndex:Int = 1, CollideIndex:Int = 1):FlxTilemapIso
+	{
+		auto = AutoTile;
+		_startingIndex = (StartingIndex <= 0) ? 0 : StartingIndex;
+		
+		loadMapData(MapData);
+		doAutoTile(DrawIndex, CollideIndex);
+		doCustomRemap();
+		randomizeIndices();
+		cacheGraphics(TileWidth, TileDepth, TileHeight, TileGraphic);
+		initTileObjects(DrawIndex, CollideIndex);
+		
+		_scaledTileWidth = _tileWidth * scaleX;
+		_scaledTileDepth = _tileDepth * scaleY;
+		_scaledTileHeight = _tileHeight * scaleY;
+		
+		// Then go through and create the actual map
+		width = widthInTiles * _scaledTileWidth;
+		height = heightInTiles * _scaledTileDepth + _scaledTileHeight;
+
+		updateMap();
 		
 		return this;		
 	}

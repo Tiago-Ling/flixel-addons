@@ -574,7 +574,16 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 					#end
 				}
 				#end
-				
+
+				//Look if we have to draw a world object on this tile
+				while (topObject != null && getIndexFromPoint(topObject.getMidpoint()) == row * widthInTiles + column)
+				{
+					topObject.cameras[0].copyFrom(Camera);
+					topObject.cameras[0].buffer = Buffer.pixels;
+					topObject.draw();
+					topObject = objects.pop();
+				}
+
 				#if flash
 				_flashPoint.x += _scaledTileWidth / 2;
 				_flashPoint.y += _scaledTileDepth / 2;
@@ -583,15 +592,6 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 				columnIndex++;
 			}
 
-			//Look if we have to draw a world object on this tile
-			while (false && topObject != null && getIndexFromPoint(topObject.getMidpoint()) == row * widthInTiles + column)
-			{
-				topObject.cameras[0].copyFrom(Camera);
-				topObject.cameras[0].buffer = Buffer.pixels;
-				topObject.draw();
-				topObject = objects.pop();
-			}
-			
 			rowIndex += widthInTiles;
 			row++;
 		}

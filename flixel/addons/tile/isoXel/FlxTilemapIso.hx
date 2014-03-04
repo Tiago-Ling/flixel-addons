@@ -14,6 +14,7 @@ import flixel.system.layer.Region;
 import flixel.util.loaders.TextureRegion;
 import flixel.system.FlxCollisionType;
 import flixel.system.FlxAssets;
+import flixel.FlxSprite;
 
 
 /**
@@ -185,6 +186,14 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 		super.destroy();
 	}
 
+	/**
+	 * Sort every objects in the game world by their drawing order
+	 */
+	public function sortOrder():Void
+	{
+		//TODO
+	}
+	
 	//Logic or rendering ?
 	#if !FLX_NO_DEBUG
 	/**
@@ -200,7 +209,13 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 			_lastVisualDebug = FlxG.debugger.visualDebug;
 			setDirty();
 		}
+
+		sortOrder();
 		
+		//Call objects update method
+		for (object in group)
+			object.update();
+
 		super.update();
 	}
 	#end
@@ -420,6 +435,12 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 	 */
 	private function drawTilemap(Buffer:FlxTilemapBufferIso, Camera:FlxCamera):Void
 	{
+		//Take a copy of the sorted array
+		var objects : Array<FlxSprite> = group.copy();
+		var topObject = objects.pop();
+		var objectFlashPoint = new Point();
+		var objectFlashRect = new Rectangle();
+		
 		#if flash
 		Buffer.fill();
 		#else
@@ -562,9 +583,47 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 				column++;
 				columnIndex++;
 			}
+
+			//Look if we have to draw a world object on this tile
+			while (false && topObject != null && getIndexFromPoint(topObject.getMidpoint()) == row + column * widthInTiles)
+			{
+				//We draw the topObject
+
+				topObject._point.x = topObject.x - _point.x;
+				topObject._point.y = topObject.y - _point.y;
+
+				objectFlashPoint.x = Math.fround(topObject._point.x);
+				objectFlashPoint.y = Math.fround(topObject._point.y);
+				
+				objectFlashRect.width = topObject.frameWidth;
+				objectFlashRect.height = topObject.frameHeight;
+
+				trace(objectFlashPoint);
+				Buffer.pixels.copyPixels(topObject.framePixels, objectFlashRect, objectFlashPoint, null, null, true);
+
+				topObject = objects.pop();
+			}
 			
 			rowIndex += widthInTiles;
 			row++;
+		}
+
+		while (topObject != null)
+		{
+			//We draw the topObject
+
+			topObject._point.x = topObject.x - _point.x;
+			topObject._point.y = topObject.y - _point.y;
+
+			objectFlashPoint.x = Math.fround(topObject._point.x);
+			objectFlashPoint.y = Math.fround(topObject._point.y);
+			
+			objectFlashRect.width = topObject.frameWidth;
+			objectFlashRect.height = topObject.frameHeight;
+
+			Buffer.pixels.copyPixels(topObject.framePixels, objectFlashRect, objectFlashPoint, null, null, true);
+
+			topObject = objects.pop();
 		}
 		
 		#if !flash

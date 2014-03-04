@@ -3,6 +3,7 @@ import flixel.FlxObject;
 import flixel.tile.FlxTilemap;
 import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemapBuffer;
+import flixel.tile.FlxBaseTilemap;
 import flixel.system.layer.DrawStackItem;
 import flixel.util.FlxPoint;
 import flash.display.BitmapData;
@@ -26,91 +27,16 @@ import flixel.system.FlxAssets;
  * @see FlxTilemap
  * @version 1.0.0
  */
-class FlxTilemapIso extends FlxObject
+class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 {
-	/**
-	 * A set of generic tiles you can use. Useful for protyping.
-	 */
-	inline static public var imgAuto:String = FlxAssets.IMG_AUTO;
-	/**
-	 * An alternate set of generic tiles you can use. Useful for protyping.
-	 */
-	inline static public var imgAutoAlt:String = FlxAssets.IMG_AUTO_ALT;
-
-	/**
-	 * No auto-tiling.
-	 * Copied from FlxTilemap
-	 */
-	inline static public var OFF:Int = 0;
-	/**
-	 * Good for levels with thin walls that don'tile need interior corner art.
-	 * Copied from FlxTilemap
-	 */
-	inline static public var AUTO:Int = 1;
-	/**
-	 * Better for levels with thick walls that look better with interior corner art.
-	 * Copied from FlxTilemap
-	 */
-	inline static public var ALT:Int = 2;
 
 	public var scaleX(default, set):Float = 1.0;
 	public var scaleY(default, set):Float = 1.0;
-	
-	/**
-	 * Set this flag to use one of the 16-tile binary auto-tile algorithms (OFF, AUTO, or ALT).
-	 */
-	public var auto:Int;
-	/**
-	 * Read-only variable, do NOT recommend changing after the map is loaded!
-	 */
-	public var widthInTiles:Int;
-	/**
-	 * Read-only variable, do NOT recommend changing after the map is loaded!
-	 */
-	public var heightInTiles:Int;
-	/**
-	 * Read-only variable, do NOT recommend changing after the map is loaded!
-	 */
-	public var totalTiles:Int;
+
 	/**
 	 * Helper variable for non-flash targets. Adjust it's value if you'll see tilemap tearing (empty pixels between tiles). To something like 1.02 or 1.03
 	 */
 	public var tileScaleHack:Float = 1.01;
-	/**
-	 * Set this to create your own image index remapper, so you can create your own tile layouts.
-	 * Mostly useful in combination with the auto-tilers.
-	 * 
-	 * Normally, each tile's value in _data corresponds to the index of a 
-	 * tile frame in the tilesheet. With this active, each value in _data
-	 * is a lookup value to that index in customTileRemap.
-	 * 
-	 * Example:
-	 *  customTileRemap = [10,9,8,7,6]
-	 *  means: 0=10, 1=9, 2=8, 3=7, 4=6
-	 */
-	public var customTileRemap:Array<Int> = null;
-	/**
-	 * If these next two arrays are not null, you're telling FlxTilemap to 
-	 * draw random tiles in certain places. 
-	 * 
-	 * _randomIndices is a list of tilemap values that should be replaced
-	 * by a randomly selected value. The available values are chosen from
-	 * the corresponding array in randomize_choices
-	 * 
-	 * So if you have:
-	 *   randomIndices = [12,14]
-	 *   randomChoices = [[0,1,2],[3,4,5,6,7]]
-	 * 
-	 * Everywhere the tilemap has a value of 12 it will be replaced by 0, 1, or, 2
-	 * Everywhere the tilemap has a value of 14 it will be replaced by 3, 4, 5, 6, 7
-	 */
-	private var _randomIndices:Array<Int> = null;
-	private var _randomChoices:Array<Array<Int>> = null;
-	/**
-	 * Setting this function allows you to control which choice will be selected for each element within _randomIndices array.
-	 * Must return a 0-1 value that gets multiplied by _randomChoices[randIndex].length;
-	 */
-	private var _randomLambda:Void->Float = null;
 	/**
 	 * Rendering helper, minimize new object instantiation on repetitive methods.
 	 */
@@ -123,10 +49,6 @@ class FlxTilemapIso extends FlxObject
 	 * Internal list of buffers, one for each camera, used for drawing the tilemaps.
 	 */
 	private var _buffers:Array<FlxTilemapBufferIso>;
-	/**
-	 * Internal representation of the actual tile data, as a large 1D array of integers.
-	 */
-	private var _data:Array<Int>;
 	/**
 	 * Internal representation of rectangles, one for each tile in the entire tilemap, used to speed up drawing.
 	 */
@@ -145,16 +67,11 @@ class FlxTilemapIso extends FlxObject
 	 * Internal, the height of a single tile.
 	 */
 	private var _tileHeight:Int;
-	
+
 	private var _scaledTileWidth:Float;
 	private var _scaledTileDepth:Float;
 	private var _scaledTileHeight:Float;
-	
-	/**
-	 * Internal collection of tile objects, one for each type of tile in the map (NOTE one for every single tile in the whole map).
-	 */
-	private var _tileObjects:Array<FlxTileIso>;
-	
+
 	#if !FLX_NO_DEBUG
 	#if flash
 	/**
@@ -180,10 +97,6 @@ class FlxTilemapIso extends FlxObject
 	 */
 	private var _lastVisualDebug:Bool;
 	#end
-	/**
-	 * Internal, used to sort of insert blank tiles in front of the tiles in the provided graphic.
-	 */
-	private var _startingIndex:Int;
 	#if !flash
 	/**
 	 * Rendering helper, minimize new object instantiation on repetitive methods. Used only in cpp
@@ -194,20 +107,14 @@ class FlxTilemapIso extends FlxObject
 	 */
 	private var _rectIDs:Array<Int>;
 	#end
-	
+
 	/**
 	 * The tilemap constructor just initializes some basic variables.
 	 */
-	public function new()
+	private function new()
 	{
 		super();
 		
-		collisionType = FlxCollisionType.TILEMAP;
-		
-		auto = OFF;
-		widthInTiles = 0;
-		heightInTiles = 0;
-		totalTiles = 0;
 		_buffers = new Array<FlxTilemapBufferIso>();
 		_flashPoint = new Point();
 		_flashRect = null;
@@ -215,7 +122,7 @@ class FlxTilemapIso extends FlxObject
 		_tileWidth = 0;
 		_tileDepth = 0;
 		_tileHeight = 0;
-		
+
 		#if flash
 		_rects = null;
 		#if !FLX_NO_DEBUG
@@ -225,9 +132,6 @@ class FlxTilemapIso extends FlxObject
 		_rectIDs = null;
 		#end
 		_tileObjects = null;
-		immovable = true;
-		moves = false;
-		cameras = null;
 		#if !FLX_NO_DEBUG
 		#if flash
 		_debugTileNotSolid = null;
@@ -236,8 +140,6 @@ class FlxTilemapIso extends FlxObject
 		#end
 		_lastVisualDebug = FlxG.debugger.visualDebug;
 		#end
-		
-		_startingIndex = 0;
 		
 		#if !flash
 		_helperPoint = new Point();
@@ -253,19 +155,7 @@ class FlxTilemapIso extends FlxObject
 		_flashRect = null;
 		var i:Int = 0;
 		var l:Int;
-		
-		if (_tileObjects != null)
-		{
-			l = _tileObjects.length;
-			
-			for (i in 0...l)
-			{
-				_tileObjects[i].destroy();
-			}
-			
-			_tileObjects = null;
-		}
-		
+
 		if (_buffers != null)
 		{
 			i = 0;
@@ -278,8 +168,6 @@ class FlxTilemapIso extends FlxObject
 			
 			_buffers = null;
 		}
-		
-		_data = null;
 		
 		#if flash
 		_rects = null;
@@ -297,6 +185,7 @@ class FlxTilemapIso extends FlxObject
 		super.destroy();
 	}
 
+	//Logic or rendering ?
 	#if !FLX_NO_DEBUG
 	/**
 	 * Main logic loop for tilemap is pretty simple,
@@ -323,7 +212,7 @@ class FlxTilemapIso extends FlxObject
 	 * 
 	 * @param	Index		The index of the tile you want to update.
 	 */
-	private function updateTile(Index:Int):Void
+	override private function updateTile(Index:Int):Void
 	{
 		var tile:FlxTileIso = _tileObjects[_data[Index]];
 		
@@ -353,125 +242,7 @@ class FlxTilemapIso extends FlxObject
 		#end
 	}
 	
-	private function loadMapData(MapData : Dynamic)
-	{
-		// Populate data if MapData is a CSV string
-		if (Std.is(MapData, String))
-		{
-			// Figure out the map dimensions based on the data string
-			_data = new Array<Int>();
-			var columns:Array<String>;
-			var rows:Array<String> = MapData.split("\n");
-			heightInTiles = rows.length;
-			widthInTiles = 0;
-			var row:Int = 0;
-			var column:Int;
-			
-			while (row < heightInTiles)
-			{
-				columns = rows[row++].split(",");
-				
-				if (columns.length <= 1)
-				{
-					heightInTiles = heightInTiles - 1;
-					continue;
-				}
-				if (widthInTiles == 0)
-				{
-					widthInTiles = columns.length;
-				}
-				column = 0;
-				
-				while (column < widthInTiles)
-				{
-					_data.push(Std.parseInt(columns[column++]));
-				}
-			}
-		}
-		// Data is already set up as an Array<Int>
-		// DON'T FORGET TO SET 'widthInTiles' and 'heightInTyles' manually BEFORE CALLING loadMap() if you pass an Array<Int>!
-		else if (Std.is(MapData, Array))
-		{
-			_data = MapData;
-		}
-		else
-		{
-			throw "Unexpected MapData format '" + Type.typeof(MapData) + "' passed into loadMap. Map data must be CSV string or Array<Int>.";
-		}
-		
-		totalTiles = _data.length;
-	}
-	
-	private function doAutoTile(DrawIndex : Int, CollideIndex : Int)
-	{
-		// Pre-process the map data if it's auto-tiled
-		var i:Int;
-		
-		if (auto > OFF)
-		{
-			_startingIndex = 1;
-			DrawIndex = 1;
-			CollideIndex = 1;
-			i = 0;
-			
-			while (i < totalTiles)
-			{
-				autoTile(i++);
-			}
-		}
-	}
-	
-	private function doCustomRemap()
-	{
-		var i:Int = 0;
-		
-		if (customTileRemap != null) 
-		{
-			i = 0;
-			while ( i < totalTiles) 
-			{
-				var old_index = _data[i];
-				var new_index = old_index;
-				if (old_index < customTileRemap.length)
-				{
-					new_index = customTileRemap[old_index];
-				}
-				_data[i] = new_index;
-				i++;
-			}
-		}
-	}
-	
-	private function randomizeIndices()
-	{
-		var i: Int;
-		
-		if (_randomIndices != null)
-		{
-			var randLambda:Void->Float = _randomLambda != null ? _randomLambda : Math.random;
-			
-			i = 0;
-			while (i < totalTiles)
-			{
-				var old_index = _data[i];
-				var j = 0;
-				var new_index = old_index;
-				for (rand in _randomIndices) 
-				{
-					if (old_index == rand) 
-					{
-						var k:Int = Std.int(randLambda() * _randomChoices[j].length);
-						new_index = _randomChoices[j][k];
-					}
-					j++;
-				}
-				_data[i] = new_index;
-				i++;
-			}
-		}
-	}
-	
-	private function cacheGraphics(TileWidth : Int, TileDepth : Int, TileHeight : Int, TileGraphic : Dynamic)
+	override private function cacheGraphics(TileWidth : Int, TileDepth : Int, TileHeight : Int, TileGraphic : Dynamic):Void
 	{
 		// Figure out the size of the tiles
 		cachedGraphics = FlxG.bitmap.add(TileGraphic);
@@ -526,7 +297,7 @@ class FlxTilemapIso extends FlxObject
 		}
 	}
 	
-	private function initTileObjects(DrawIndex : Int, CollideIndex : Int)
+	override private function initTileObjects(DrawIndex : Int, CollideIndex : Int):Void
 	{
 		// Create some tile objects that we'll use for overlap checks (one for each tile)
 		_tileObjects = new Array<FlxTileIso>();
@@ -547,7 +318,7 @@ class FlxTilemapIso extends FlxObject
 		#end
 	}
 	
-	private function updateMap()
+	override private function updateMap():Void
 	{
 		#if flash
 
@@ -570,108 +341,15 @@ class FlxTilemapIso extends FlxObject
 		#end
 	}
 
-	/**
-	 * Load the tilemap with string data and a tile graphic.
-	 * 
-	 * @param	MapData      	A string of comma and line-return delineated indices indicating what order the tiles should go in, or an <code>Array of Int</code>. YOU MUST SET <code>widthInTiles</code> and <code>heightInTyles</code> manually BEFORE CALLING <code>loadMap</code> if you pass an Array!
-	 * @param	TileGraphic		All the tiles you want to use, arranged in a strip corresponding to the numbers in MapData.
-	 * @param	TileWidth		The width of your tiles (e.g. 8) - defaults to height of the tile graphic if unspecified.
-	 * @param	TileDepth		The depth of your tiles (e.g. 8) - defaults to width if unspecified.
-	 * @param	TileHeight		The height of your tiles (e.g. 8) - defaults to 0 if unspecified.
-	 * @param	AutoTile		Whether to load the map using an automatic tile placement algorithm.  Setting this to either AUTO or ALT will override any values you put for StartingIndex, DrawIndex, or CollideIndex.
-	 * @param	StartingIndex	Used to sort of insert empty tiles in front of the provided graphic.  Default is 0, usually safest ot leave it at that.  Ignored if AutoTile is set.
-	 * @param	DrawIndex		Initializes all tile objects equal to and after this index as visible. Default value is 1.  Ignored if AutoTile is set.
-	 * @param	CollideIndex	Initializes all tile objects equal to and after this index as allowCollisions = ANY.  Default value is 1.  Ignored if AutoTile is set.  Can override and customize per-tile-type collision behavior using <code>setTileProperties()</code>.
-	 * @return	A reference to this instance of FlxTilemap, for chaining as usual :)
-	 */
-	public function loadMap(MapData:Dynamic, TileGraphic:Dynamic, TileWidth:Int = 0, TileDepth:Int = 0, TileHeight:Int = 0, AutoTile:Int = 0, StartingIndex:Int = 0, DrawIndex:Int = 1, CollideIndex:Int = 1):FlxTilemapIso
+	override private function computeDimensions():Void
 	{
-		auto = AutoTile;
-		_startingIndex = (StartingIndex <= 0) ? 0 : StartingIndex;
-		
-		loadMapData(MapData);
-		doAutoTile(DrawIndex, CollideIndex);
-		doCustomRemap();
-		randomizeIndices();
-		cacheGraphics(TileWidth, TileDepth, TileHeight, TileGraphic);
-		initTileObjects(DrawIndex, CollideIndex);
-		
 		_scaledTileWidth = _tileWidth * scaleX;
 		_scaledTileDepth = _tileDepth * scaleY;
 		_scaledTileHeight = _tileHeight * scaleY;
-		
+
 		// Then go through and create the actual map
 		width = widthInTiles * _scaledTileWidth;
-		height = heightInTiles * _scaledTileDepth + _scaledTileHeight;
-
-		updateMap();
-		
-		return this;		
-	}
-
-	/**
-	 * An internal function used by the binary auto-tilers.
-	 * 
-	 * NEED TEST
-	 * 
-	 * @param	Index		The index of the tile you want to analyze.
-	 */
-	private function autoTile(Index:Int):Void
-	{
-		if (_data[Index] == 0)
-		{
-			return;
-		}
-		
-		_data[Index] = 0;
-		
-		// UP
-		if ((Index-widthInTiles < 0) || (_data[Index-widthInTiles] > 0))
-		{
-			_data[Index] += 1;
-		}
-		// RIGHT
-		if ((Index%widthInTiles >= widthInTiles-1) || (_data[Index+1] > 0))
-		{
-			_data[Index] += 2;
-		}
-		// DOWN
-		if ((Std.int(Index+widthInTiles) >= totalTiles) || (_data[Index+widthInTiles] > 0)) 
-		{
-			_data[Index] += 4;
-		}
-		// LEFT
-		if ((Index%widthInTiles <= 0) || (_data[Index-1] > 0))
-		{
-			_data[Index] += 8;
-		}
-		
-		// The alternate algo checks for interior corners
-		if ((auto == ALT) && (_data[Index] == 15))
-		{
-			// BOTTOM LEFT OPEN
-			if ((Index%widthInTiles > 0) && (Std.int(Index+widthInTiles) < totalTiles) && (_data[Index+widthInTiles-1] <= 0))
-			{
-				_data[Index] = 1;
-			}
-			// TOP LEFT OPEN
-			if ((Index%widthInTiles > 0) && (Index-widthInTiles >= 0) && (_data[Index-widthInTiles-1] <= 0))
-			{
-				_data[Index] = 2;
-			}
-			// TOP RIGHT OPEN
-			if ((Index%widthInTiles < widthInTiles-1) && (Index-widthInTiles >= 0) && (_data[Index-widthInTiles+1] <= 0))
-			{
-				_data[Index] = 4;
-			}
-			// BOTTOM RIGHT OPEN
-			if ((Index % widthInTiles < widthInTiles - 1) && (Std.int(Index + widthInTiles) < totalTiles) && (_data[Index + widthInTiles + 1] <= 0))
-			{
-				_data[Index] = 8;
-			}
-		}
-		
-		_data[Index] += 1;
+		height = heightInTiles * _scaledTileDepth + _scaledTileHeight;		
 	}
 	
 	/**
@@ -933,7 +611,7 @@ class FlxTilemapIso extends FlxObject
 	 * @param   WideDiagonal   Whether to require an additional tile to make diagonal movement. Default value is true;
 	 * @return	An Array of FlxPoints, containing all waypoints from the start to the end.  If no path could be found, then a null reference is returned.
 	 */
-	public function findPath(Start:FlxPoint, End:FlxPoint, Simplify:Bool = true, RaySimplify:Bool = false, WideDiagonal:Bool = true):Array<FlxPoint>
+	override public function findPath(Start:FlxPoint, End:FlxPoint, Simplify:Bool = true, RaySimplify:Bool = false, WideDiagonal:Bool = true):Array<FlxPoint>
 	{
 		// Figure out what tile we are starting and ending on.
 		var startIndex:Int = getIndexFromPoint(Start);
@@ -1000,7 +678,7 @@ class FlxTilemapIso extends FlxObject
 	 * @param	Start	The tile we're on in our walk backward.
 	 * @param	Points	A Flash <code>Array</code> of <code>FlxPoint</code> nodes composing the path from the start to the end, compiled in reverse order.
 	 */
-	private function walkPath(Data:Array<Int>, Start:Int, Points:Array<FlxPoint>):Void
+	override private function walkPath(Data:Array<Int>, Start:Int, Points:Array<FlxPoint>):Void
 	{
 		//drawX = _helperPoint.x + heightInTiles * _scaledTileWidth / 2 - (_scaledTileWidth / 2 * (row + 1)) + column * _scaledTileWidth / 2;
 		//drawY = _helperPoint.y + row * _scaledTileHeight / 2 + column * _scaledTileHeight / 2;
@@ -1097,36 +775,6 @@ class FlxTilemapIso extends FlxObject
 		return;
 	}
 
-	/**
-	 * Adjust collision settings and/or bind a callback function to a range of tiles.
-	 * This callback function, if present, is triggered by calls to overlap() or overlapsWithCallback().
-	 * 
-	 * @param	Tile				The tile or tiles you want to adjust.
-	 * @param	AllowCollisions		Modify the tile or tiles to only allow collisions from certain directions, use FlxObject constants NONE, ANY, LEFT, RIGHT, etc.  Default is "ANY".
-	 * @param	Callback			The function to trigger, e.g. <code>lavaCallback(Tile:FlxTile, Object:FlxObject)</code>.
-	 * @param	CallbackFilter		If you only want the callback to go off for certain classes or objects based on a certain class, set that class here.
-	 * @param	Range				If you want this callback to work for a bunch of different tiles, input the range here.  Default value is 1.
-	 */
-	public function setTileProperties(Tile:Int, AllowCollisions:Int = 0x1111, ?Callback:FlxObject->FlxObject->Void, ?CallbackFilter:Class<Dynamic>, Range:Int = 1):Void
-	{
-		if (Range <= 0)
-		{
-			Range = 1;
-		}
-		
-		var tile:FlxTileIso;
-		var i:Int = Tile;
-		var l:Int = Tile + Range;
-		
-		while (i < l)
-		{
-			tile = _tileObjects[i++];
-			tile.allowCollisions = AllowCollisions;
-			tile.callbackFunction = Callback;
-			tile.filter = CallbackFilter;
-		}
-	}
-
 	private function set_scaleX(Scale:Float):Float
 	{
 		Scale = Math.abs(Scale);
@@ -1151,39 +799,33 @@ class FlxTilemapIso extends FlxObject
 		return Scale;
 	}
 
-	/**
-	 * Pathfinding helper function, strips out extra points on the same line.
-	 * 
-	 * @param	Points		An array of <code>FlxPoint</code> nodes.
-	 */
-	private function simplifyPath(Points:Array<FlxPoint>):Void
+	private function set_scaleY(Scale:Float):Float
 	{
-		var deltaPrevious:Float;
-		var deltaNext:Float;
-		var last:FlxPoint = Points[0];
-		var node:FlxPoint;
-		var i:Int = 1;
-		var l:Int = Points.length - 1;
+		Scale = Math.abs(Scale);
+		scaleY = Scale;
+		_scaledTileDepth = _tileDepth * Scale;
+		_scaledTileHeight = _tileHeight * Scale;
+		height = heightInTiles * _scaledTileDepth;
 		
-		while(i < l)
+		if (cameras != null)
 		{
-			node = Points[i];
-			deltaPrevious = (node.x - last.x)/(node.y - last.y);
-			deltaNext = (node.x - Points[i + 1].x) / (node.y - Points[i + 1].y);
-			
-			if ((last.x == Points[i + 1].x) || (last.y == Points[i + 1].y) || (deltaPrevious == deltaNext))
+			var i:Int = 0;
+			var l:Int = cameras.length;
+			while (i < l)
 			{
-				Points[i] = null;
+				if (_buffers[i] != null)
+				{
+					_buffers[i].updateRows(_tileDepth, heightInTiles, Scale, cameras[i]);
+				}
+				i++;
 			}
-			else
-			{
-				last = node;
-			}
-			
-			i++;
 		}
+		
+		return Scale;
 	}
 
+	//This one could be part to logic, but not sure with hex tiles ?
+	//Would require some generics too to include _tileObjects inside the BaseTilemap class
 	/**
 	 * Pathfinding helper function, floods a grid with distance information until it finds the end point.
 	 * NOTE: Currently this process does NOT use any kind of fancy heuristic! It's pretty brute.
@@ -1195,7 +837,7 @@ class FlxTilemapIso extends FlxObject
 	 * @param   WideDiagonal Whether to require an additional tile to make diagonal movement. Default value is true.
 	 * @return	A Flash <code>Array</code> of <code>FlxPoint</code> nodes.  If the end tile could not be found, then a null <code>Array</code> is returned instead.
 	 */
-	private function computePathDistance(StartIndex:Int, EndIndex:Int, WideDiagonal:Bool):Array<Int>
+	override private function computePathDistance(StartIndex:Int, EndIndex:Int, WideDiagonal:Bool):Array<Int>
 	{
 		// Create a distance-based representation of the tilemap.
 		// All walls are flagged as -2, all open areas as -1.
@@ -1380,7 +1022,7 @@ class FlxTilemapIso extends FlxObject
 	 * @param	Resolution	Defaults to 1, meaning check every tile or so.  Higher means more checks!
 	 * @return	Returns true if the ray made it from Start to End without hitting anything.  Returns false and fills Result if a tile was hit.
 	 */
-	public function ray(Start:FlxPoint, End:FlxPoint, ?Result:FlxPoint, Resolution:Float = 1):Bool
+	override public function ray(Start:FlxPoint, End:FlxPoint, ?Result:FlxPoint, Resolution:Float = 1):Bool
 	{
 		var step:Float = _scaledTileWidth;
 		
@@ -1478,68 +1120,5 @@ class FlxTilemapIso extends FlxObject
 		}
 		
 		return true;
-	}
-
-	/**
-	 * Pathfinding helper function, strips out even more points by raycasting from one point to the next and dropping unnecessary points.
-	 * 
-	 * @param	Points		An array of <code>FlxPoint</code> nodes.
-	 */
-	private function raySimplifyPath(Points:Array<FlxPoint>):Void
-	{
-		var source:FlxPoint = Points[0];
-		var lastIndex:Int = -1;
-		var node:FlxPoint;
-		var i:Int = 1;
-		var l:Int = Points.length;
-		
-		while(i < l)
-		{
-			node = Points[i++];
-			
-			if (node == null)
-			{
-				continue;
-			}
-			
-			if (ray(source,node,_point))	
-			{
-				if (lastIndex >= 0)
-				{
-					Points[lastIndex] = null;
-				}
-			}
-			else
-			{
-				source = Points[lastIndex];
-			}
-			
-			lastIndex = i - 1;
-		}
-	}
-
-	private function set_scaleY(Scale:Float):Float
-	{
-		Scale = Math.abs(Scale);
-		scaleY = Scale;
-		_scaledTileDepth = _tileDepth * Scale;
-		_scaledTileHeight = _tileHeight * Scale;
-		height = heightInTiles * _scaledTileDepth;
-		
-		if (cameras != null)
-		{
-			var i:Int = 0;
-			var l:Int = cameras.length;
-			while (i < l)
-			{
-				if (_buffers[i] != null)
-				{
-					_buffers[i].updateRows(_tileDepth, heightInTiles, Scale, cameras[i]);
-				}
-				i++;
-			}
-		}
-		
-		return Scale;
 	}
 }

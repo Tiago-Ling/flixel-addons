@@ -1,4 +1,5 @@
 package flixel.addons.tile.isoXel;
+import flixel.FlxCamera;
 import flixel.FlxObject;
 import flixel.tile.FlxTilemap;
 import flixel.tile.FlxTile;
@@ -194,8 +195,6 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 		//TODO
 	}
 	
-	//Logic or rendering ?
-	#if !FLX_NO_DEBUG
 	/**
 	 * Main logic loop for tilemap is pretty simple,
 	 * just checks to see if visual debug got turned on.
@@ -204,21 +203,23 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 	 */
 	override public function update():Void
 	{
+	#if !FLX_NO_DEBUG
 		if (_lastVisualDebug != FlxG.debugger.visualDebug)
 		{
 			_lastVisualDebug = FlxG.debugger.visualDebug;
 			setDirty();
 		}
+	#end
 
 		sortOrder();
 		
+
+		super.update();
+
 		//Call objects update method
 		for (object in group)
 			object.update();
-
-		super.update();
 	}
-	#end
 
 	/**
 	 * Internal function used in setTileByIndex() and the constructor to update the map.
@@ -427,7 +428,7 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 			#end
 		}
 	}
-
+	
 	/**
 	 * Internal function that actually renders the tilemap to the tilemap buffer.  Called by draw().
 	 * @param	Buffer		The <code>FlxTilemapBuffer</code> you are rendering to.
@@ -438,9 +439,7 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 		//Take a copy of the sorted array
 		var objects : Array<FlxSprite> = group.copy();
 		var topObject = objects.pop();
-		var objectFlashPoint = new Point();
-		var objectFlashRect = new Rectangle();
-		
+
 		#if flash
 		Buffer.fill();
 		#else
@@ -585,22 +584,11 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 			}
 
 			//Look if we have to draw a world object on this tile
-			while (false && topObject != null && getIndexFromPoint(topObject.getMidpoint()) == row + column * widthInTiles)
+			while (false && topObject != null && getIndexFromPoint(topObject.getMidpoint()) == row * widthInTiles + column)
 			{
-				//We draw the topObject
-
-				topObject._point.x = topObject.x - _point.x;
-				topObject._point.y = topObject.y - _point.y;
-
-				objectFlashPoint.x = Math.fround(topObject._point.x);
-				objectFlashPoint.y = Math.fround(topObject._point.y);
-				
-				objectFlashRect.width = topObject.frameWidth;
-				objectFlashRect.height = topObject.frameHeight;
-
-				trace(objectFlashPoint);
-				Buffer.pixels.copyPixels(topObject.framePixels, objectFlashRect, objectFlashPoint, null, null, true);
-
+				topObject.cameras[0].copyFrom(Camera);
+				topObject.cameras[0].buffer = Buffer.pixels;
+				topObject.draw();
 				topObject = objects.pop();
 			}
 			
@@ -611,18 +599,9 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 		while (topObject != null)
 		{
 			//We draw the topObject
-
-			topObject._point.x = topObject.x - _point.x;
-			topObject._point.y = topObject.y - _point.y;
-
-			objectFlashPoint.x = Math.fround(topObject._point.x);
-			objectFlashPoint.y = Math.fround(topObject._point.y);
-			
-			objectFlashRect.width = topObject.frameWidth;
-			objectFlashRect.height = topObject.frameHeight;
-
-			Buffer.pixels.copyPixels(topObject.framePixels, objectFlashRect, objectFlashPoint, null, null, true);
-
+			topObject.cameras[0].copyFrom(Camera);
+			topObject.cameras[0].buffer = Buffer.pixels;
+			topObject.draw();
 			topObject = objects.pop();
 		}
 		

@@ -356,6 +356,28 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 		updateFrameData();
 		#end
 	}
+	
+	/**
+	 * Use this method for creating tileSheet for FlxTilemap. Must be called after loadMap() method.
+	 * If you forget to call it then you will not see this FlxTilemap on c++ target
+	 */
+	public function updateFrameData():Void
+	{
+		if (cachedGraphics != null && _tileWidth >= 1 && _tileHeight >= 1)
+		{
+			framesData = cachedGraphics.tilesheet.getSpriteSheetFrames(region, new Point(0, 0));
+			#if !flash
+			_rectIDs = new Array<Int>();
+			FlxArrayUtil.setLength(_rectIDs, totalTiles);
+			#end
+			var i:Int = 0;
+			
+			while (i < totalTiles)
+			{
+				updateTile(i++);
+			}
+		}
+	}
 
 	override private function computeDimensions():Void
 	{
@@ -574,7 +596,8 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 					#end
 				}
 				#end
-
+				
+				#if flash
 				//Look if we have to draw a world object on this tile
 				while (topObject != null && getIndexFromPoint(topObject.getMidpoint()) == row * widthInTiles + column)
 				{
@@ -583,6 +606,7 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 					topObject.draw();
 					topObject = objects.pop();
 				}
+				#end
 
 				#if flash
 				_flashPoint.x += _scaledTileWidth / 2;
@@ -595,7 +619,8 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 			rowIndex += widthInTiles;
 			row++;
 		}
-
+		
+		#if flash
 		while (topObject != null)
 		{
 			//We draw the topObject
@@ -604,6 +629,7 @@ class FlxTilemapIso extends FlxBaseTilemap<FlxTilemapIso, FlxTileIso>
 			topObject.draw();
 			topObject = objects.pop();
 		}
+		#end
 		
 		#if !flash
 		drawItem.position = currIndex;

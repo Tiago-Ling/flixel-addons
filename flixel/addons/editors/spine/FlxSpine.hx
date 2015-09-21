@@ -60,14 +60,30 @@ class FlxSpine extends FlxSprite
 	 * @param	DataPath		The directory these files are located at
 	 * @param	Scale			Animation scale
 	 */
-	public static function readSkeletonData(AtlasName:String, AnimationName:String, DataPath:String, Scale:Float = 1):SkeletonData
+	public static function readSkeletonData(AtlasName:String, AnimationName:String, DataPath:String, Scale:Float = 1, sJson:SkeletonJson = null):SkeletonData
 	{
 		if (DataPath.lastIndexOf("/") < 0) DataPath += "/"; // append / at the end of the folder path
 		var spineAtlas:Atlas = new Atlas(Assets.getText(DataPath + AtlasName + ".atlas"), new FlixelTextureLoader(DataPath));
-		var json:SkeletonJson = new SkeletonJson(new AtlasAttachmentLoader(spineAtlas));
-		json.scale = Scale;
-		var skeletonData:SkeletonData = json.readSkeletonData(Assets.getText(DataPath + AnimationName + ".json"), AnimationName);
+		sJson = new SkeletonJson(new AtlasAttachmentLoader(spineAtlas));
+		sJson.scale = Scale;
+		var skeletonData:SkeletonData = sJson.readSkeletonData(Assets.getText(DataPath + AnimationName + ".json"), AnimationName);
+		
 		return skeletonData;
+	}
+	
+	public static function setSkeletonData(json:SkeletonJson, AnimationData:String, AnimationName:String):SkeletonData
+	{
+		var skeletonData:SkeletonData = json.readSkeletonData(AnimationData, AnimationName);
+		return skeletonData;
+	}
+	
+	public static function createSkeletonJson(AtlasData:String, GraphicData:BitmapData, Scale:Float = 1, ?SecPage:BitmapData):SkeletonJson
+	{
+		var spineAtlas:Atlas = new Atlas(AtlasData, new FlixelTextureLoader(GraphicData, SecPage));
+		var json = new SkeletonJson(new AtlasAttachmentLoader(spineAtlas));
+		json.scale = Scale;
+		
+		return json;
 	}
 	
 	public var skeleton(default, null):Skeleton;
@@ -153,10 +169,33 @@ class FlxSpine extends FlxSprite
 			collider.destroy();
 		collider = null;
 		
-		skeletonData = null;
-		skeleton = null;
-		state = null;
-		stateData = null;
+		if (skeletonData != null) {
+			skeletonData.dispose();
+			skeletonData = null;
+		}
+		
+		if (skeleton != null) {
+			skeleton.dispose();
+			skeleton = null;
+		}
+		
+		//TODO: Create method for freeing memory inside State
+		if (state != null) {
+			state.events = null;
+			state.tracks = null;
+			state.onStart.listeners = null;
+			state.onComplete.listeners = null;
+			state.onEnd.listeners = null;
+			state.onEvent.listeners = null;
+			
+			state = null;
+		}
+		
+		//TODO: Create method for freeing memory inside StateData
+		if (stateData != null) {
+			stateData.skeletonData = null;
+			stateData = null;
+		}
 		
 		_tempVertices = null;
 		_quadTriangles = null;
@@ -436,10 +475,12 @@ class FlxSpine extends FlxSprite
 		var atlasFrames:FlxAtlasFrames = (graph.atlasFrames == null) ? new FlxAtlasFrames(graph) : graph.atlasFrames;
 		
 		var name:String = region.name;
-		var offset:FlxPoint = FlxPoint.get(0, 0);
+		//var offset:FlxPoint = FlxPoint.get(0, 0);
+		var offset:FlxPoint = FlxPoint.weak(0, 0);
 		var frameRect:FlxRect = new FlxRect(region.x, region.y, regionWidth, regionHeight);
 		
-		var sourceSize:FlxPoint = FlxPoint.get(frameRect.width, frameRect.height);
+		//var sourceSize:FlxPoint = FlxPoint.get(frameRect.width, frameRect.height);
+		var sourceSize:FlxPoint = FlxPoint.weak(frameRect.width, frameRect.height);
 		var imageFrame = FlxImageFrame.fromFrame(atlasFrames.addAtlasFrame(frameRect, sourceSize, offset, name));
 		
 		var wrapper:FlxSprite = new FlxSprite();

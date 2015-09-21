@@ -44,7 +44,7 @@ class FlxBackdrop extends FlxSprite
 	 * Try to eliminate 1 px gap between tiles in tile render mode by increasing tile scale, 
 	 * so the tile will look one pixel wider than it is.
 	 */
-	public var useScaleHack:Bool = true;
+	public var useScaleHack:Bool = false;
 	
 	/**
 	 * Creates an instance of the FlxBackdrop class, used to create infinitely scrolling backgrounds.
@@ -75,7 +75,8 @@ class FlxBackdrop extends FlxSprite
 		scrollFactor.x = ScrollX;
 		scrollFactor.y = ScrollY;
 		
-		loadGraphic(Graphic);
+		if (Graphic != null)
+			loadGraphic(Graphic);
 		
 		FlxG.signals.gameResized.add(onGameResize);
 	}
@@ -302,6 +303,12 @@ class FlxBackdrop extends FlxSprite
 			}
 		}
 		
-		return _tileFrame = Frame;
+		//return _tileFrame = Frame;
+		if (Frame != null)
+			_tileFrame = Frame.copyTo(_tileFrame);
+		else
+			_tileFrame = Frame;
+			
+		return _tileFrame;
 	}
 }

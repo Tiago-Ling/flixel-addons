@@ -175,19 +175,63 @@ class FlxSpine extends FlxSprite
 		}
 		
 		if (skeleton != null) {
+			cast(skeleton, FlxSkeleton).sprite = null;
 			skeleton.dispose();
 			skeleton = null;
 		}
 		
 		//TODO: Create method for freeing memory inside State
 		if (state != null) {
-			state.events = null;
-			state.tracks = null;
-			state.onStart.listeners = null;
-			state.onComplete.listeners = null;
-			state.onEnd.listeners = null;
-			state.onEvent.listeners = null;
+			if (state.events != null) {
+				for (i in 0...state.events.length) {
+					if (state.events[i].data != null) {
+						state.events[i].data.name = null;
+						state.events[i].data.stringValue = null;
+					}
+					state.events[i].data = null;
+					state.events[i].stringValue = null;
+					state.events[i] = null;
+				}
+				state.events = null;
+			}
 			
+			if (state.tracks != null) {
+				for (i in 0...state.tracks.length) {
+					if (state.tracks[i] != null) {
+						state.tracks[i].animation = null;
+						state.tracks[i].next = null;
+						state.tracks[i].onComplete = null;
+						state.tracks[i].onEnd = null;
+						state.tracks[i].onEvent = null;
+						state.tracks[i].onStart = null;
+						state.tracks[i].previous = null;
+					}
+					state.tracks[i] = null;
+				}
+				state.tracks = null;
+			}
+			
+			if (state.onStart.listeners != null) {
+				state.onStart.listeners = null;
+			}
+			
+			if (state.onComplete.listeners != null) {
+				state.onComplete.listeners = null;
+			}
+			
+			if (state.onEnd.listeners != null) {
+				state.onEnd.listeners = null;
+			}
+			
+			if (state.onEvent.listeners != null) {
+				state.onEvent.listeners = null;
+			}
+			
+			state.clearTracks();
+			if (state.data != null) {
+				state.data.skeletonData = null;
+				state.data = null;
+			}
 			state = null;
 		}
 		

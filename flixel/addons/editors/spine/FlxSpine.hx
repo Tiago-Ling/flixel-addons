@@ -227,7 +227,6 @@ class FlxSpine extends FlxSprite
 				state.onEvent.listeners = null;
 			}
 			
-			state.clearTracks();
 			if (state.data != null) {
 				state.data.skeletonData = null;
 				state.data = null;
@@ -772,7 +771,7 @@ class FlxSpineCollider extends FlxObject
 
 class FlxSkeleton extends Skeleton
 {
-	private var sprite:FlxSpine;
+	public var sprite:FlxSpine;
 	
 	public function new(data:SkeletonData, sprite:FlxSpine)
 	{

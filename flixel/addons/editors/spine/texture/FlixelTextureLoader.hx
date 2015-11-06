@@ -1,5 +1,6 @@
 package flixel.addons.editors.spine.texture;
 
+import flixel.graphics.FlxGraphic;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import openfl.Assets;
 import openfl.display.BitmapData;
@@ -66,5 +67,22 @@ class FlixelTextureLoader implements TextureLoader
 		cast(page.rendererObject, BitmapData).dispose();
 		page.rendererObject = null;
 		page = null;
+	}
+	
+	public function dispose()
+	{
+		if (path != null) {
+			if (Std.is(path, FlxGraphic)) {
+				cast(path, FlxGraphic).destroy();
+			} else if (Std.is(path, BitmapData)) {
+				cast(path, BitmapData).dispose();
+			}
+			path = null;
+		}
+		
+		if (secPage != null) {
+			secPage.dispose();
+			secPage = null;
+		}
 	}
 }

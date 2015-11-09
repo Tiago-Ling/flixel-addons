@@ -104,6 +104,9 @@ class FlxSpine extends FlxSprite
 	private var _tempVertices:Array<Float>;
 	private var _quadTriangles:Array<Int>;
 	
+	//Test
+	private var persist:Bool;
+	
 	/**
 	 * Instantiate a new Spine Sprite.
 	 * @param	skeletonData	Animation data from Spine (.json .skel .png), get it like this: FlxSpineSprite.readSkeletonData( "mySpriteData", "assets/" );
@@ -113,12 +116,15 @@ class FlxSpine extends FlxSprite
 	 * @param	Height			The maximum height of this sprite (avoid very large sprites since they are performance intensive).
 	 * @param	renderMeshes	If true, then graphic will be rendered with drawTriangles(), if false (by default), then it will be rendered with drawTiles().
 	 */
-	public function new(skeletonData:SkeletonData, X:Float = 0, Y:Float = 0, Width:Float = 0, Height:Float = 0, OffsetX:Float = 0, OffsetY:Float = 0, renderMeshes:Bool = false)
+	public function new(skeletonData:SkeletonData, X:Float = 0, Y:Float = 0, Width:Float = 0, Height:Float = 0, OffsetX:Float = 0, OffsetY:Float = 0, renderMeshes:Bool = false, persist:Bool = false)
 	{
 		super(X, Y);
 		
 		width = Width;
 		height = Height;
+		
+		//Test
+		this.persist = persist;
 		
 		this.skeletonData = skeletonData;
 		
@@ -165,78 +171,85 @@ class FlxSpine extends FlxSprite
 	
 	override public function destroy():Void
 	{
-		if (collider != null)
+		if (collider != null) {
 			collider.destroy();
-		collider = null;
+			collider = null;
+		}
 		
 		if (skeletonData != null) {
-			skeletonData.dispose();
+			if (!persist)
+				skeletonData.dispose();
 			skeletonData = null;
 		}
 		
 		if (skeleton != null) {
-			cast(skeleton, FlxSkeleton).sprite = null;
-			skeleton.dispose();
+			if (!persist) {
+				cast(skeleton, FlxSkeleton).sprite = null;
+				skeleton.dispose();
+			}
 			skeleton = null;
 		}
 		
 		//TODO: Create method for freeing memory inside State
 		if (state != null) {
-			if (state.events != null) {
-				for (i in 0...state.events.length) {
-					if (state.events[i].data != null) {
-						state.events[i].data.name = null;
-						state.events[i].data.stringValue = null;
+			if (!persist) {
+				if (state.events != null) {
+					for (i in 0...state.events.length) {
+						if (state.events[i].data != null) {
+							state.events[i].data.name = null;
+							state.events[i].data.stringValue = null;
+						}
+						state.events[i].data = null;
+						state.events[i].stringValue = null;
+						state.events[i] = null;
 					}
-					state.events[i].data = null;
-					state.events[i].stringValue = null;
-					state.events[i] = null;
+					state.events = null;
 				}
-				state.events = null;
-			}
-			
-			if (state.tracks != null) {
-				for (i in 0...state.tracks.length) {
-					if (state.tracks[i] != null) {
-						state.tracks[i].animation = null;
-						state.tracks[i].next = null;
-						state.tracks[i].onComplete = null;
-						state.tracks[i].onEnd = null;
-						state.tracks[i].onEvent = null;
-						state.tracks[i].onStart = null;
-						state.tracks[i].previous = null;
+				
+				if (state.tracks != null) {
+					for (i in 0...state.tracks.length) {
+						if (state.tracks[i] != null) {
+							state.tracks[i].animation = null;
+							state.tracks[i].next = null;
+							state.tracks[i].onComplete = null;
+							state.tracks[i].onEnd = null;
+							state.tracks[i].onEvent = null;
+							state.tracks[i].onStart = null;
+							state.tracks[i].previous = null;
+						}
+						state.tracks[i] = null;
 					}
-					state.tracks[i] = null;
+					state.tracks = null;
 				}
-				state.tracks = null;
-			}
-			
-			if (state.onStart.listeners != null) {
-				state.onStart.listeners = null;
-			}
-			
-			if (state.onComplete.listeners != null) {
-				state.onComplete.listeners = null;
-			}
-			
-			if (state.onEnd.listeners != null) {
-				state.onEnd.listeners = null;
-			}
-			
-			if (state.onEvent.listeners != null) {
-				state.onEvent.listeners = null;
-			}
-			
-			if (state.data != null) {
-				state.data.skeletonData = null;
-				state.data = null;
+				
+				if (state.onStart.listeners != null) {
+					state.onStart.listeners = null;
+				}
+				
+				if (state.onComplete.listeners != null) {
+					state.onComplete.listeners = null;
+				}
+				
+				if (state.onEnd.listeners != null) {
+					state.onEnd.listeners = null;
+				}
+				
+				if (state.onEvent.listeners != null) {
+					state.onEvent.listeners = null;
+				}
+				
+				if (state.data != null) {
+					state.data.skeletonData = null;
+					state.data = null;
+				}
 			}
 			state = null;
 		}
 		
 		//TODO: Create method for freeing memory inside StateData
 		if (stateData != null) {
-			stateData.skeletonData = null;
+			if (!persist)
+				stateData.skeletonData = null;
 			stateData = null;
 		}
 		
@@ -317,7 +330,8 @@ class FlxSpine extends FlxSprite
 					{
 						var atlasRegion:AtlasRegion = cast region.rendererObject;
 						var bitmapData:BitmapData = cast(atlasRegion.page.rendererObject, BitmapData);
-						wrapper = new FlxStrip(0, 0, bitmapData);
+						wrapper = new FlxStrip(0, 0, bitmapData, persist);
+						//This should be removed. It is allowed because RegionAttachment implements Dynamic<Dynamic>
 						region.wrapperStrip = wrapper;
 					}
 					
@@ -342,7 +356,7 @@ class FlxSpine extends FlxSprite
 					{
 						var atlasRegion:AtlasRegion = cast mesh.rendererObject;
 						var bitmapData:BitmapData = cast(atlasRegion.page.rendererObject, BitmapData);
-						wrapper = new FlxStrip(0, 0, bitmapData);
+						wrapper = new FlxStrip(0, 0, bitmapData, persist);
 						mesh.rendererObject = wrapper;
 					}
 					
@@ -367,7 +381,7 @@ class FlxSpine extends FlxSprite
 					{
 						var atlasRegion:AtlasRegion = cast skinnedMesh.rendererObject;
 						var bitmapData:BitmapData = cast(atlasRegion.page.rendererObject, BitmapData);
-						wrapper = new FlxStrip(0, 0, bitmapData);
+						wrapper = new FlxStrip(0, 0, bitmapData, persist);
 						skinnedMesh.rendererObject = wrapper;
 					}
 					

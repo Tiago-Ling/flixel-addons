@@ -288,7 +288,7 @@ class FlxBackdrop extends FlxSprite
 			regenGraphic();
 	}
 	
-	private function setTileFrame(Frame:FlxFrame):FlxFrame
+	public function setTileFrame(Frame:FlxFrame):FlxFrame
 	{
 		if (Frame != _tileFrame)
 		{

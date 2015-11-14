@@ -107,6 +107,16 @@ class FlxSpine extends FlxSprite
 	//Test
 	private var persist:Bool;
 	
+	
+	//TEST
+	var drawOrder:Array<Slot>;
+	var graph:FlxGraphic;
+	var wrapper:FlxStrip;
+	var worldVertices:Array<Float>;
+	var triangles:Array<Int>;
+	var uvtData:Array<Float>;
+	//END
+	
 	/**
 	 * Instantiate a new Spine Sprite.
 	 * @param	skeletonData	Animation data from Spine (.json .skel .png), get it like this: FlxSpineSprite.readSkeletonData( "mySpriteData", "assets/" );
@@ -171,6 +181,22 @@ class FlxSpine extends FlxSprite
 	
 	override public function destroy():Void
 	{
+		//TEST
+		if (drawOrder != null) {
+			for (i in 0...drawOrder.length) {
+				drawOrder[i] = null;
+			}
+			drawOrder = null;
+		}
+		
+		if (!persist)
+			graph = null;
+		wrapper = null;
+		worldVertices = null;
+		triangles = null;
+		uvtData = null;
+		//END
+		
 		if (collider != null) {
 			collider.destroy();
 			collider = null;
@@ -193,55 +219,7 @@ class FlxSpine extends FlxSprite
 		//TODO: Create method for freeing memory inside State
 		if (state != null) {
 			if (!persist) {
-				if (state.events != null) {
-					for (i in 0...state.events.length) {
-						if (state.events[i].data != null) {
-							state.events[i].data.name = null;
-							state.events[i].data.stringValue = null;
-						}
-						state.events[i].data = null;
-						state.events[i].stringValue = null;
-						state.events[i] = null;
-					}
-					state.events = null;
-				}
-				
-				if (state.tracks != null) {
-					for (i in 0...state.tracks.length) {
-						if (state.tracks[i] != null) {
-							state.tracks[i].animation = null;
-							state.tracks[i].next = null;
-							state.tracks[i].onComplete = null;
-							state.tracks[i].onEnd = null;
-							state.tracks[i].onEvent = null;
-							state.tracks[i].onStart = null;
-							state.tracks[i].previous = null;
-						}
-						state.tracks[i] = null;
-					}
-					state.tracks = null;
-				}
-				
-				if (state.onStart.listeners != null) {
-					state.onStart.listeners = null;
-				}
-				
-				if (state.onComplete.listeners != null) {
-					state.onComplete.listeners = null;
-				}
-				
-				if (state.onEnd.listeners != null) {
-					state.onEnd.listeners = null;
-				}
-				
-				if (state.onEvent.listeners != null) {
-					state.onEvent.listeners = null;
-				}
-				
-				if (state.data != null) {
-					state.data.skeletonData = null;
-					state.data = null;
-				}
+				state.dispose();
 			}
 			state = null;
 		}
@@ -249,7 +227,7 @@ class FlxSpine extends FlxSprite
 		//TODO: Create method for freeing memory inside StateData
 		if (stateData != null) {
 			if (!persist)
-				stateData.skeletonData = null;
+				stateData.dispose();
 			stateData = null;
 		}
 		
@@ -293,13 +271,13 @@ class FlxSpine extends FlxSprite
 	
 	private function renderWithTriangles():Void
 	{
-		var drawOrder:Array<Slot> = skeleton.drawOrder;
+		drawOrder = skeleton.drawOrder;
 		var n:Int = drawOrder.length;
-		var graph:FlxGraphic = null;
-		var wrapper:FlxStrip;
-		var worldVertices:Array<Float> = _tempVertices;
-		var triangles:Array<Int> = null;
-		var uvtData:Array<Float> = null;
+		graph = null;
+		wrapper = null;
+		worldVertices = _tempVertices;
+		triangles = null;
+		uvtData = null;
 		var verticesLength:Int = 0;
 		var numVertices:Int;
 		
@@ -324,7 +302,8 @@ class FlxSpine extends FlxSprite
 					
 					if (region.wrapperStrip != null)
 					{
-						wrapper = cast region.wrapperStrip;
+						//wrapper = cast region.wrapperStrip;
+						wrapper = region.wrapperStrip;
 					}
 					else
 					{
